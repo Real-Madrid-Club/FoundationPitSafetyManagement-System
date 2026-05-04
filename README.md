@@ -66,8 +66,9 @@ MySQL 8.0
 cd backend
 # 请在 application.yml 中修改数据库连接的账号密码
 mvn spring-boot:run
-4. 启动前端
 ```
+4. 启动前端
+
 ```bash
 cd frontend
 npm install   # 安装依赖
@@ -104,3 +105,50 @@ docs: 文档变更
 style: 代码格式修改（不影响业务逻辑）
 
 refactor: 代码重构
+
+
+
+## 📝 团队 Git 协作必读指南 (小白保姆级教程)
+
+为了防止代码互相覆盖或仓库混乱，请所有前端和后端组员**严格遵守**以下提交流程。
+
+### 🚨 第 0 步：永远先确认你所在的文件夹！
+遇到 `fatal: not a git repository` 报错，是因为你没进到项目文件夹里。
+每次打开终端准备敲 Git 命令前，**第一件事必须是进入项目根目录**：
+```bash
+# Mac 用户：
+cd ~/FoundationPitSafetyManagement-System
+
+# Windows 用户 (根据你存放的实际盘符和路径修改)：
+cd D:\你的文件夹\FoundationPitSafetyManagement-System
+```
+🌅 第 1 步：每天开工第一件事 —— 拉取最新代码
+千万不要一上来就写代码！先把你队友昨晚提交的代码拉到你自己的电脑上：
+
+```Bash
+git pull origin main
+```
+💻 第 2 步：愉快地写代码...
+🌙 第 3 步：写完收工 —— 提交代码“三部曲”
+写完一个功能或下班前，按照顺序执行以下三行命令：
+
+```Bash
+# 1. 把你修改的所有文件统统装进“暂存区”（注意最后有个小圆点，代表全部文件）
+git add .
+```
+```
+# 2. 给这次提交写个清晰的备注（必须按照下面的规范写）
+git commit -m "feat: 写清楚你这次干了什么，比如：吴博完成了设备列表查询接口"
+```
+```
+# 3. 把代码推送到云端仓库
+git push origin main
+```
+🏷️ 附：Commit 备注前缀规范
+feat: 开发了新功能（例如：feat: 新增登录页 UI）
+
+fix: 修复了 Bug（例如：fix: 修复点击查询按钮报错的问题）
+
+docs: 只修改了文档或 README
+
+style: 修改了代码格式、注释（不影响具体逻辑）

@@ -14,7 +14,7 @@
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>个人设置</el-dropdown-item>
+              <el-dropdown-item @click="showPwd = true">修改密码</el-dropdown-item>
               <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -53,6 +53,10 @@
             <el-icon><TrendCharts /></el-icon>
             <span>监测数据</span>
           </el-menu-item>
+          <el-menu-item index="/foundation-pit">
+            <el-icon><Box /></el-icon>
+            <span>基坑模型</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -61,17 +65,51 @@
         <router-view />
       </el-main>
     </el-container>
+
+    <!-- 修改密码弹窗 -->
+    <el-dialog v-model="showPwd" title="修改密码" width="380px" :close-on-click-modal="false">
+      <el-form :model="pwdForm" ref="pwdFormRef" label-width="80px">
+        <el-form-item label="旧密码" prop="oldPwd"
+          :rules="[{ required: true, message: '请输入旧密码', trigger: 'blur' }]">
+          <el-input v-model="pwdForm.oldPwd" type="password" show-password />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPwd"
+          :rules="[{ required: true, min: 6, message: '至少6位', trigger: 'blur' }]">
+          <el-input v-model="pwdForm.newPwd" type="password" show-password />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPwd"
+          :rules="[{ required: true, validator: validateConfirm, trigger: 'blur' }]">
+          <el-input v-model="pwdForm.confirmPwd" type="password" show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showPwd = false">取消</el-button>
+        <el-button type="primary" @click="handleChangePwd">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { House, Monitor, Tickets, ChatDotRound, TrendCharts } from '@element-plus/icons-vue'
+import { House, Monitor, Tickets, ChatDotRound, TrendCharts, Box } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { changePassword } from '@/api/auth'
 
 const router = useRouter()
 const user = ref(null)
+const showPwd = ref(false)
+const pwdFormRef = ref(null)
+const pwdForm = reactive({ oldPwd: '', newPwd: '', confirmPwd: '' })
+
+const validateConfirm = (_rule, value, callback) => {
+  if (value !== pwdForm.newPwd) {
+    callback(new Error('两次密码不一致'))
+  } else {
+    callback()
+  }
+}
 
 onMounted(() => {
   // 获取用户信息
@@ -101,6 +139,22 @@ const roleTagType = computed(() => {
   if (roles.includes('ROLE_BUYER')) return 'success'
   return 'info'
 })
+
+const handleChangePwd = async () => {
+  const valid = await pwdFormRef.value.validate().catch(() => false)
+  if (!valid) return
+  try {
+    const uid = user.value?.id || user.value?.userInfo?.id
+    await changePassword(uid, pwdForm.oldPwd, pwdForm.newPwd)
+    ElMessage.success('密码修改成功')
+    showPwd.value = false
+    pwdForm.oldPwd = ''
+    pwdForm.newPwd = ''
+    pwdForm.confirmPwd = ''
+  } catch {
+    ElMessage.error('修改失败，请检查旧密码')
+  }
+}
 
 const handleLogout = () => {
   ElMessageBox.confirm(

@@ -45,36 +45,80 @@ FoundationPitSafetyManagement-System/
 ├── docs/               # 项目文档、接口文档与系统架构图
 ├── sql/                # 数据库初始化脚本 (init_schema.sql)
 └── README.md           # 项目说明文件
+## 🚀 快速开始
+
+### 1. 环境准备
+
+- JDK 17+
+- Node.js 16+
+- MySQL 8.0
+- Python 3（数据导入用）
+
+### 2. 初始化数据库
+
+```bash
+# 登录 MySQL 创建数据库
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS pit_safety_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 建表 + 种子数据
+mysql -u root -p pit_safety_db < sql/init_schema.sql
+
+# 生成监测数据导入文件（需先安装 pandas: pip3 install pandas openpyxl）
+python3 sql/import_data.py
+
+# 导入 35 万条真实监测数据
+mysql -u root -p pit_safety_db < sql/import_adjust.sql
+mysql -u root -p pit_safety_db < sql/import_total_station.sql
+mysql -u root -p pit_safety_db < sql/import_steel_temp.sql
+mysql -u root -p pit_safety_db < sql/import_axial_force.sql
 ```
-🚀 快速开始
-1. 环境准备
-确保本地开发环境已安装以下软件：
 
-JDK 17 或以上
+### 3. 配置 DeepSeek API Key
 
-Node.js 16.x 或以上
+```bash
+export DEEPSEEK_API_KEY="sk-你的key"
+```
 
-MySQL 8.0
+或写入 `~/.zshrc` 永久生效：
+```bash
+echo 'export DEEPSEEK_API_KEY="sk-你的key"' >> ~/.zshrc
+source ~/.zshrc
+```
 
-2. 初始化数据库
-登录本地 MySQL，创建名为 pit_safety_db 的数据库。
+### 4. 修改数据库密码
 
-运行项目根目录 sql/init_schema.sql 脚本，完成表结构与基础测试数据的初始化。
+打开 `backend/src/main/resources/application.yml`，将 `password` 改为你的 MySQL 密码：
 
-3. 启动后端
+```yaml
+spring:
+  datasource:
+    password: 你的密码
+```
+
+### 5. 启动后端
+
 ```bash
 cd backend
-# 请在 application.yml 中修改数据库连接的账号密码
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
-4. 启动前端
+后端运行在 `http://localhost:8081`
+
+### 6. 启动前端
 
 ```bash
 cd frontend
-npm install   # 安装依赖
-npm run dev   # 启动开发服务器
-前端服务默认运行在 http://localhost:5173
+npm install
+npm run dev
 ```
+前端运行在 `http://localhost:5173`
+
+### 7. 登录
+
+| 账号 | 密码 | 角色 |
+|------|------|------|
+| `admin` | `123456` | 监控中心管理员 |
+| `buyer1` | `123456` | 施工方购买用户 |
+| `repairer1` | `123456` | 现场维修工程师 |
 👨‍💻 开发团队与核心分工 (计科24-1)
 本项目由 5 人团队协作完成：
 

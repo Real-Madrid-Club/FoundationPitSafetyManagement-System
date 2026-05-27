@@ -1,0 +1,241 @@
+{
+  "environment": {
+    "ambient_temp_range": {
+      "min": 1.52,
+      "max": 21.89,
+      "mean": 9.890371498434215,
+      "p95": 16.54
+    },
+    "humidity_range": {
+      "min": 23.27,
+      "max": 93.28,
+      "mean": 68.902675560894,
+      "p95": 88.08
+    },
+    "pressure_range": {
+      "min": 945.8,
+      "max": 973.9,
+      "mean": 961.3189610055338,
+      "p95": 969.6
+    }
+  },
+  "supports": {
+    "SP1": {
+      "force_range": {
+        "min": 13.0,
+        "max": 20819.0,
+        "mean": 1617.1322969852679,
+        "p95": 2234.0
+      },
+      "position_range": {
+        "min": 197.0,
+        "max": 1926.1,
+        "mean": 245.4668639630557,
+        "p95": 246.6
+      },
+      "temperature_range": {
+        "min": 2.36,
+        "max": 31.09,
+        "mean": 12.747822368207098,
+        "p95": 22.46
+      },
+      "force_temperature_corr": 0.30216089714431515,
+      "force_position_corr": 0.3258851217135807,
+      "source": {
+        "file": "sp1_data.xlsx",
+        "row_count": 61498,
+        "columns": [
+          "Time",
+          "WForce",
+          "FPosition",
+          "Temperature"
+        ],
+        "key_columns": [
+          "Time"
+        ]
+      }
+    },
+    "4P1": {
+      "force_range": {
+        "min": 8.0,
+        "max": 2329.0,
+        "mean": 1106.9058976043757,
+        "p95": 1875.0
+      },
+      "position_range": {
+        "min": 197.0,
+        "max": 271.4,
+        "mean": 266.3168333007761,
+        "p95": 269.5
+      },
+      "temperature_range": {
+        "min": 2.71,
+        "max": 28.58,
+        "mean": 12.992798565111611,
+        "p95": 21.75
+      },
+      "force_temperature_corr": 0.7073290088141614,
+      "force_position_corr": 0.14397919900270673,
+      "source": {
+        "file": "4p1_data.xlsx",
+        "row_count": 56311,
+        "columns": [
+          "Time",
+          "WForce",
+          "FPosition",
+          "Temperature"
+        ],
+        "key_columns": [
+          "Time"
+        ]
+      }
+    },
+    "4P2": {
+      "force_range": {
+        "min": 7.0,
+        "max": 20819.0,
+        "mean": 945.8451928811324,
+        "p95": 1518.0
+      },
+      "position_range": {
+        "min": 197.0,
+        "max": 1926.1,
+        "mean": 253.27634263473433,
+        "p95": 256.4
+      },
+      "temperature_range": {
+        "min": 2.19,
+        "max": 28.74,
+        "mean": 12.385801814244013,
+        "p95": 21.43
+      },
+      "force_temperature_corr": 0.5447818410659663,
+      "force_position_corr": 0.5743055882436648,
+      "source": {
+        "file": "4p2-data.xlsx",
+        "row_count": 63718,
+        "columns": [
+          "Time",
+          "WForce",
+          "FPosition",
+          "Temperature"
+        ],
+        "key_columns": [
+          "Time"
+        ]
+      }
+    }
+  },
+  "temperature": {
+    "range": {
+      "min": -2.963684,
+      "max": 91.53082,
+      "mean": 8.703047650585049,
+      "p95": 19.172607
+    },
+    "smoothness_hint": {
+      "diff_mean": 0.10562627516663117,
+      "diff_p95": 0.3525315
+    }
+  },
+  "provenance": {
+    "total_station": {
+      "file": "全站仪数据.csv",
+      "row_count": 46622,
+      "columns": [
+        "测点编号",
+        "X(m)",
+        "Y(m)",
+        "H(m)",
+        "X(m).1",
+        "Y(m).1",
+        "H(m).1",
+        "ΔX(mm)",
+        "ΔY(mm)",
+        "ΔH(mm)",
+        "∑X(mm)",
+        "∑Y(mm)",
+        "∑H(mm)",
+        "温度(℃)",
+        "湿度(%HR)",
+        "大气压力(百帕)",
+        "数据时间",
+        "传感器编码"
+      ],
+      "key_columns": [
+        "测点编号",
+        "数据时间"
+      ]
+    },
+    "support_temperature": {
+      "file": "钢支撑温度数据.csv",
+      "row_count": 122127,
+      "columns": [
+        "测点编号",
+        "数据时间",
+        "温度",
+        "测量值",
+        "目标值",
+        "变化值",
+        "分组值",
+        "结果值",
+        "传感器编码"
+      ],
+      "key_columns": [
+        "测点编号",
+        "数据时间"
+      ]
+    },
+    "sp1": {
+      "file": "sp1_data.xlsx",
+      "row_count": 61498,
+      "columns": [
+        "Time",
+        "WForce",
+        "FPosition",
+        "Temperature"
+      ],
+      "key_columns": [
+        "Time"
+      ]
+    },
+    "4p1": {
+      "file": "4p1_data.xlsx",
+      "row_count": 56311,
+      "columns": [
+        "Time",
+        "WForce",
+        "FPosition",
+        "Temperature"
+      ],
+      "key_columns": [
+        "Time"
+      ]
+    },
+    "4p2": {
+      "file": "4p2-data.xlsx",
+      "row_count": 63718,
+      "columns": [
+        "Time",
+        "WForce",
+        "FPosition",
+        "Temperature"
+      ],
+      "key_columns": [
+        "Time"
+      ]
+    },
+    "force_adjustment": {
+      "file": "轴力调整记录.xlsx",
+      "row_count": 1449,
+      "columns": [
+        "Name",
+        "Content",
+        "CreateTime"
+      ],
+      "key_columns": [
+        "CreateTime"
+      ]
+    }
+  }
+}

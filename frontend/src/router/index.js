@@ -47,6 +47,12 @@ const routes = [
         name: 'MonitorData',
         component: MonitorData,
         meta: { title: '监测数据', requiresAuth: true }
+      },
+      {
+        path: 'foundation-pit',
+        name: 'FoundationPit3D',
+        component: () => import('../views/FoundationPit3D.vue'),
+        meta: { title: '基坑模型', requiresAuth: true }
       }
     ]
   }

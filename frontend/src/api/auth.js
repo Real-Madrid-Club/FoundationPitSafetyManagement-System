@@ -23,3 +23,9 @@ export function updateUser(data) {
 export function deleteUser(id) {
   return request.delete(`/user/${id}`)
 }
+
+export function changePassword(id, oldPassword, newPassword) {
+  return request.post(`/auth/users/${id}/change-password`, null, {
+    params: { oldPassword, newPassword }
+  })
+}

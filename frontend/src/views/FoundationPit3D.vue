@@ -155,59 +155,48 @@ function savePosition(code, vec) {
   localStorage.setItem('pit_sensor_positions', JSON.stringify(pos))
 }
 
-// ---- 计算默认传感器坐标 ----
+// ---- 固定默认传感器坐标（手工调整好的位置） ----
+const FIXED_DEFAULT_POSITIONS = {
+  "6501945": { "x": 2.0533454123497563,  "y": 1.662514580766289,   "z": -4.711158101173263 },
+  "6501947": { "x": -0.9242524081469234, "y": 1.6625145807662918,  "z": -3.4250741900901964 },
+  "6501952": { "x": 0.8835577957998257,  "y": 1.66251458076629,    "z": -5.8341253492904634 },
+  "6501955": { "x": -5.735125629515666,  "y": 1.5239716990357657,  "z": -5.604550306779821 },
+  "6501957": { "x": -1.8198834571590807, "y": 1.6625145807662882,  "z": 0.3476074721345306 },
+  "6501959": { "x": -2.182536989599523,  "y": 1.6625145807662882,  "z": 1.9869064778089385 },
+  "6501961": { "x": -5.159696804040333,  "y": 1.5239716990357657,  "z": -2.802753715931445 },
+  "6501962": { "x": 3.748329001242677,   "y": 1.6625145807662882,  "z": 2.4471904047655713 },
+  "6501965": { "x": -0.7104682692121829, "y": 1.6625145807662882,  "z": 2.8234390921882735 },
+  "6501968": { "x": -0.2850089801014235, "y": 1.6625145807662882,  "z": 0.10717167474721023 },
+  "FRHY-01": { "x": -4.231160525760979,  "y": 1.3854288173052414,  "z": -6.045283507411403 },
+  "FRHY-02": { "x": 5.336010029962435,   "y": 1.3854288173052396,  "z": -5.5721298015067 },
+  "FRHY-03": { "x": 0.20949308730126592, "y": 1.3854288173052396,  "z": 5.502530211488921 },
+  "FRHY-04": { "x": -1.5858193199149127, "y": 1.3854288173052414,  "z": -6.325767090500911 },
+  "FRHY-05": { "x": 5.558097690564463,   "y": 1.3854288173052414,  "z": 0.4043794587793563 },
+  "FRHY-06": { "x": -3.138287262630902,  "y": 1.3854288173052414,  "z": 6.3445023198168276 },
+  "FRHY-07": { "x": 6.054839558820337,   "y": 1.3854288173052414,  "z": 3.596082015487024 },
+  "HSD-01":  { "x": 3.5680647557972986,  "y": 1.3854288173052414,  "z": -7.102979181579116 },
+  "HSD-02":  { "x": 5.377050348999573,   "y": 1.3854288173052396,  "z": -3.542089886261669 },
+  "HSD-03":  { "x": -6.254522226820334,  "y": 1.3854288173052378,  "z": 5.318983317124516 },
+  "SP1":     { "x": -5.505054597101509,  "y": 2.216686107688382,   "z": 1.5759773450681855 },
+  "4P1":     { "x": 2.072581739529088,   "y": 2.2166861076883855,  "z": -2.425966331404581 },
+  "4P2":     { "x": 4.369696017849982,   "y": 2.2166861076883855,  "z": -0.06747488675277591 },
+}
+
 function computeDefaultPositions(box) {
-  const w = box.max.x - box.min.x
-  const d = box.max.z - box.min.z
-  const h = box.max.y - box.min.y
-  const mx = box.min.x, mz = box.min.z
-  const bottomY = box.min.y + h * 0.1   // 坑底附近
-  const lowY = box.min.y + h * 0.3      // 下部
-  const midY = box.min.y + h * 0.5      // 中部
-  const highY = box.min.y + h * 0.65    // 上部支撑梁
-
   const defaults = {}
-
-  // 轴力计(3台) – 上部支撑梁，x方向排开
-  const axialCodes = ['SP1', '4P1', '4P2']
-  axialCodes.forEach((code, i) => {
-    defaults[code] = { x: mx + w * (0.25 + i * 0.25), y: highY, z: mz + d * 0.15 }
-  })
-
-  // 全站仪(11台) – 沿坑壁四周，高度递减
-  const stationCodes = SENSOR_DEFS.filter(s => s.type === 'totalStation').map(s => s.code)
-  stationCodes.forEach((code, i) => {
-    const side = i % 4
-    const along = Math.floor(i / 4) / 3
-    const depth = i < 4 ? highY : i < 8 ? midY : lowY  // 前4个在上部，中4个在中间，最后在底部
-    let x, z
-    if (side === 0) { x = mx + w * (0.1 + along * 0.8); z = mz }
-    else if (side === 1) { x = mx + w; z = mz + d * (0.1 + along * 0.8) }
-    else if (side === 2) { x = mx + w * (0.9 - along * 0.8); z = mz + d }
-    else { x = mx; z = mz + d * (0.9 - along * 0.8) }
-    defaults[code] = { x, y: depth, z }
-  })
-
-  // 温度/其他传感器(10台) – 网格分布，中下部
-  const tempCodes = SENSOR_DEFS.filter(s => s.type === 'steelTemp').map(s => s.code)
-  const cols = 4
-  tempCodes.forEach((code, i) => {
-    const col = i % cols, row = Math.floor(i / cols)
-    defaults[code] = {
-      x: mx + w * (0.15 + col * 0.23),
-      y: box.min.y + h * (0.2 + row * 0.25),
-      z: mz + d * (0.2 + Math.floor(row / 2) * 0.3),
+  SENSOR_DEFS.forEach(s => {
+    if (FIXED_DEFAULT_POSITIONS[s.code]) {
+      defaults[s.code] = { ...FIXED_DEFAULT_POSITIONS[s.code] }
+    } else {
+      defaults[s.code] = { x: 0, y: box ? box.max.y : 0, z: 0 }
     }
   })
-
-  // 已保存坐标覆盖
   const saved = loadPositions()
   SENSOR_DEFS.forEach(s => {
     if (saved[s.code]) defaults[s.code] = saved[s.code]
   })
   return defaults
 }
-
 // ---- 创建传感器标记 ----
 function createMarkers(modelGroup, box) {
   const positions = computeDefaultPositions(box)

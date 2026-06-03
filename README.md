@@ -1,179 +1,221 @@
-# 🏗️ 基坑安全管理系统 (Foundation Pit Safety Management System)
+# 🏗️ 基坑安全管理系统
 
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.x-blue.svg)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-orange.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Three.js](https://img.shields.io/badge/Three.js-r170-black.svg)
+![DeepSeek AI](https://img.shields.io/badge/AI-DeepSeek-purple.svg)
 
-> 《JavaWeb应用开发》期末综合项目考核 - 目标：A档优秀项目 🏆
+> 《JavaWeb应用开发》期末综合项目考核 · 目标：A档优秀项目 🏆
+
+---
 
 ## 📖 项目简介
 
-基坑工程是建筑施工中最危险的环节之一，设备正常运行是保障安全的核心。本项目是一个面向多角色的**基坑设备维保与智能工单调度系统**。
-系统不仅实现了基础的设备生命周期管理与工单流转，还引入了 RBAC 细粒度权限控制，并探索性地融入了 AI/智能预警算法，以解决复杂施工环境下的设备运维痛点。
+基坑工程是建筑施工中**最危险的环节**之一。本项目面向**监控中心、施工方、维修工程师**三类角色，构建了一套集**设备管理、工单调度、AI故障诊断、趋势预测、3D数字孪生**于一体的基坑安全管理系统。
 
-## ✨ 核心功能与业务闭环
+- **35 万条**真实基坑监测数据（全站仪位移、伺服轴力、钢支撑温度）
+- 覆盖 **24 台**传感器，数据时间跨 3 个月
+- 基于 **PitMonitor-TwinBench** 学术基准数据集校准
+- AI 识别 **9 种**异常类型（物理失效 / 传感器故障 / 温度补偿误差 等）
 
-* **👥 多角色权限隔离 (RBAC)**：系统划分为购买用户（施工方）、管理方（监控中心）与现场维修工，各司其职，数据绝对隔离。
-* **📦 设备档案中心**：全面管理测斜仪、水位计、土压力计等专业设备的入库、防尘防水等级(IP)、标定周期及报废流程。
-* **🔄 智能工单流转**：涵盖“一键报修 -> 智能派单 -> 现场签到 -> 结果回填 -> 验收确认”的全链路状态机。
-* **🤖 AI/算法赋能 (亮点)**：在工单维修环节接入 AI 检修助手，辅助现场人员快速排障；后台持续监测设备健康度，预防异常跳变。
+---
 
-## 🛠️ 技术栈选型
+## ✨ 核心功能
 
-本项目采用主流的**前后端分离**架构进行开发：
+| 模块 | 功能 | 技术亮点 |
+|------|------|----------|
+| 👥 **角色权限** | admin/buyer/repairer 三级隔离 | 菜单不同、按钮不同、数据互不可见 |
+| 📦 **设备管理** | 设备档案 CRUD + 状态流转（正常→预警→故障→报废） | 14 台真实传感器 |
+| 🔄 **工单流转** | 创建→指派→签到→维修→验收 全链路状态机 | SQL WHERE 前驱状态校验防并发 |
+| 🤖 **AI 诊断** | 健康监测 / 检修助手 / 趋势预测 三种模式 | DeepSeek + System Prompt 注入校准参数 |
+| 🪞 **3D 数字孪生** | 基坑模型 + 24 传感器嵌入 + 血条 | Three.js + CSS2DRenderer |
+| 📊 **健康预测** | 每台设备剩余安全运行时间预测 | Python scikit-learn 线性回归 + calibration.json |
+| 📈 **数据大屏** | 设备状态饼图 + 告警趋势折线图 | ECharts 实时渲染 |
+| ⏱ **监测页面** | 3 类数据 Tab 切换 + 时序曲线缩放 | dataZoom 交互 + 智能预测一键触发 |
 
-### 后端 (Backend)
-* **核心框架**: Spring Boot
-* **持久层**: MyBatis / MyBatis-Plus
-* **数据库**: MySQL 8.0
-* **安全与权限**: Spring Security + JWT 加密鉴权
-* **创新层**: Python 预警算法 / LLM 大模型 API 接入
+---
 
-### 前端 (Frontend)
-* **核心框架**: Vue.js 3.x
-* **UI 组件库**: Element Plus
-* **网络请求**: Axios
-* **路由管理**: Vue Router
+## 🛠️ 技术栈
+
+| 层 | 技术 |
+|----|------|
+| **后端** | Java 17 · Spring Boot 3.2 · MyBatis · Spring Security · JWT · WebFlux |
+| **前端** | Vue 3 · Element Plus · ECharts · Three.js · CSS2DRenderer · Axios · Vue Router |
+| **数据库** | MySQL 8.0 |
+| **AI** | DeepSeek API (deepseek-chat) |
+| **预测算法** | Python 3 · scikit-learn · NumPy · pymysql |
+
+---
 
 ## 📁 目录结构
 
 ```text
 FoundationPitSafetyManagement-System/
-├── backend/            # Spring Boot 后端工程代码
-├── frontend/           # Vue 3 前端工程代码
-├── docs/               # 项目文档、接口文档与系统架构图
-├── sql/                # 数据库初始化脚本 (init_schema.sql)
-└── README.md           # 项目说明文件
+├── backend/
+│   └── src/main/java/cn/edu/cdu/pitsafety/
+│       ├── ai/              # DeepSeek AI 模块
+│       ├── dashboard/        # 大屏统计 API
+│       ├── monitor/          # 监测数据时序 API
+│       ├── predict/          # 设备健康预测 API
+│       ├── security/         # Spring Security + JWT
+│       └── system/           # 用户/设备/工单 CRUD
+├── frontend/
+│   └── src/
+│       ├── api/              # Axios 接口封装 (6个模块)
+│       ├── views/            # 页面组件 (含 FoundationPit3D)
+│       └── router/           # 路由 + 角色守卫
+├── sql/
+│   ├── init_schema.sql       # 9张表建表 + 种子数据
+│   ├── import_data.py        # 数据导入脚本
+│   ├── train_model.py        # 健康预测模型训练脚本
+│   ├── calibration.json      # PitMonitor-TwinBench 校准参数
+│   └── data/                 # 原始 CSV/Excel 数据文件
+├── openspec/                 # 开发文档 + 分工安排
+└── README.md
+```
+
+---
+
 ## 🚀 快速开始
 
-### 1. 环境准备
+### 1. 环境要求
 
 - JDK 17+
 - Node.js 16+
 - MySQL 8.0
-- Python 3（数据导入用）
+- Python 3 + pip
 
 ### 2. 初始化数据库
 
 ```bash
-# 登录 MySQL 创建数据库
+# 创建数据库
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS pit_safety_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# 建表 + 种子数据
+# 建表 + 种子数据（3个角色 + admin + 14台设备）
 mysql -u root -p pit_safety_db < sql/init_schema.sql
+```
 
-# 生成监测数据导入文件（需先安装 pandas: pip3 install pandas openpyxl）
+### 3. 导入监测数据
+
+```bash
+pip3 install pandas openpyxl
+
+# 生成 INSERT SQL 文件
 python3 sql/import_data.py
 
-# 导入 35 万条真实监测数据
+# 导入 35 万条数据（按文件从小到大）
 mysql -u root -p pit_safety_db < sql/import_adjust.sql
 mysql -u root -p pit_safety_db < sql/import_total_station.sql
 mysql -u root -p pit_safety_db < sql/import_steel_temp.sql
 mysql -u root -p pit_safety_db < sql/import_axial_force.sql
 ```
 
-### 3. 配置 DeepSeek API Key
+### 4. 训练健康预测模型
 
 ```bash
-export DEEPSEEK_API_KEY="sk-你的key"
+pip3 install pymysql scikit-learn
+python3 sql/train_model.py
+# 输出: backend/src/main/resources/model_params.json
 ```
 
-或写入 `~/.zshrc` 永久生效：
+### 5. 配置 DeepSeek API Key
+
 ```bash
 echo 'export DEEPSEEK_API_KEY="sk-你的key"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-### 4. 修改数据库密码
+### 6. 修改数据库密码
 
-打开 `backend/src/main/resources/application.yml`，将 `password` 改为你的 MySQL 密码：
+编辑 `backend/src/main/resources/application.yml`，把 `password` 改成你的 MySQL 密码。
 
-```yaml
-spring:
-  datasource:
-    password: 你的密码
-```
-
-### 5. 启动后端
+### 7. 启动后端
 
 ```bash
 cd backend
 ./mvnw spring-boot:run
+# → http://localhost:8081
 ```
-后端运行在 `http://localhost:8081`
 
-### 6. 启动前端
+### 8. 启动前端
 
 ```bash
 cd frontend
 npm install
 npm run dev
+# → http://localhost:5173
 ```
-前端运行在 `http://localhost:5173`
 
-### 7. 登录
+### 9. 登录
 
 | 账号 | 密码 | 角色 |
 |------|------|------|
 | `admin` | `123456` | 监控中心管理员 |
 | `buyer1` | `123456` | 施工方购买用户 |
 | `repairer1` | `123456` | 现场维修工程师 |
-👨‍💻 开发团队与核心分工 (计科24-1)
-本项目由 5 人团队协作完成：
 
-胡昱璠 (技术负责人)：架构设计、数据库模型、核心算法/AI对接、Git 工作流审查与代码合并。
+---
 
-袁梓昊 (后端开发)：RBAC 权限模块、用户认证体系(Token/拦截器)搭建。
+## 📊 数据概览
 
-吴博   (后端开发)：设备档案管理、故障报修与工单流转全链路接口开发。
+| 表 | 数据量 | 说明 |
+|----|--------|------|
+| `data_axial_force` | 181,527 | 伺服轴力(SP1/4P1/4P2) |
+| `data_steel_temperature` | 122,127 | 钢支撑温度(8台) |
+| `data_total_station` | 46,622 | 全站仪位移(11台) |
+| `maintenance_adjust_record` | 1,449 | 轴力调整记录 |
+| `device_info` | 14 | 设备档案 |
+| `work_order` | 运行时 | 工单流转 |
+| **合计** | **351,725** | 跨越 2025-12 ~ 2026-03 |
 
-胡智慧 (前端开发)：Vue 3 页面搭建、Element Plus 组件封装、前后端接口联调。
+---
 
 罗志林 (文档与测开)：项目模型算法设计、期末汇报文档撰写。
+## 🎮 功能演示路线
 
+### 新手上手 5 步
 
-## 📝 团队 Git 协作必读指南 (小白保姆级教程)
+1. **登录 admin** → 首页大盘看设备统计和告警趋势
+2. **设备管理** → 查看 14 台传感器档案
+3. **监测数据** → 切「伺服轴力」Tab → 选 SP1 → 看时序曲线 → 点 🔮智能预测
+4. **基坑模型** → 3D 全景 → 旋转 / 缩放 → 点传感器球看数据 → 看血条健康度
+5. **AI 助手** → 切「健康监测」→ 粘贴异常数据 → AI 诊断故障类型
 
-为了防止代码互相覆盖或仓库混乱，请所有前端和后端组员**严格遵守**以下提交流程。
+### 三角色协作流程
 
-### 🚨 第 0 步：永远先确认你所在的文件夹！
-遇到 `fatal: not a git repository` 报错，是因为你没进到项目文件夹里。
-每次打开终端准备敲 Git 命令前，**第一件事必须是进入项目根目录**：
+```
+buyer1 创建工单 → admin 派单给张工 → repairer1 签到 → 维修完成 → buyer1 验收
+```
+
+> 💡 三个账号用不同浏览器（Chrome / Firefox / Safari）同时登录，可演示完整协作。
+
+---
+
+## 👨‍💻 开发团队
+
+| 成员 | 核心贡献 |
+|------|----------|
+| **胡昱璠** (组长) | 架构设计 · AI 模块 · 3D 基坑模型 · 健康预测算法 · 数据入库 · Code Review |
+| **袁梓昊** (后端) | RBAC 权限 · 监测数据 API · 大屏统计 API · JWT 认证 · Spring Security |
+| **吴博** (后端) | 设备管理 CRUD · 工单全链路 API · 角色数据隔离 · 状态机 SQL |
+| **胡智慧** (前端) | 全部页面搭建 · ECharts 图表 · 角色隔离 UI · 前后端联调 · API 封装 |
+| **罗志林** (文档) | 数据入库 · 期末报告 · 集成测试 · 3D 模型处理 |
+
+---
+
+## 📝 Git 协作规范
+
 ```bash
-# Mac 用户：
-cd ~/FoundationPitSafetyManagement-System
-
-# Windows 用户 (根据你存放的实际盘符和路径修改)：
-cd D:\你的文件夹\FoundationPitSafetyManagement-System
-```
-🌅 第 1 步：每天开工第一件事 —— 拉取最新代码
-千万不要一上来就写代码！先把你队友昨晚提交的代码拉到你自己的电脑上：
-
-```Bash
+# 开工前
 git pull origin main
-```
-💻 第 2 步：愉快地写代码...
-🌙 第 3 步：写完收工 —— 提交代码“三部曲”
-写完一个功能或下班前，按照顺序执行以下三行命令：
 
-```Bash
-# 1. 把你修改的所有文件统统装进“暂存区”（注意最后有个小圆点，代表全部文件）
+# 提交
 git add .
-```
-```
-# 2. 给这次提交写个清晰的备注（必须按照下面的规范写）
-git commit -m "feat: 写清楚你这次干了什么，比如：吴博完成了设备列表查询接口"
-```
-```
-# 3. 把代码推送到云端仓库
+git commit -m "feat: xxx"   # fix: xxx / docs: xxx / style: xxx
+
+# 推送
 git push origin main
 ```
-🏷️ 附：Commit 备注前缀规范
-feat: 开发了新功能（例如：feat: 新增登录页 UI）
 
-fix: 修复了 Bug（例如：fix: 修复点击查询按钮报错的问题）
-
-docs: 只修改了文档或 README
-
-style: 修改了代码格式、注释（不影响具体逻辑）
+> 仓库地址：`github.com/Real-Madrid-Club/FoundationPitSafetyManagement-System`

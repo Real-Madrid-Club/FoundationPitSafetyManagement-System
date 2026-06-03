@@ -369,10 +369,22 @@ function positionHealthBar(code, yOffsetVal) {
 async function fetchAllHealth() {
   try {
     const list = await request.get('/health/all')
+    const statColors = { danger: 0xff4444, warning: 0xff9900, normal: 0x44bb44 }
     if (Array.isArray(list)) {
       list.forEach(d => {
         healthDataMap[d.sensorCode] = d
         updateHealthBar(d.sensorCode, d.healthPercent, d.status)
+        // 传感器标记颜色同步血条
+        const m = markerMap[d.sensorCode]
+        if (m && m.mesh && m.mesh.material) {
+          const c = statColors[d.status] || 0x888888
+          m.mesh.material.color.setHex(c)
+          m.mesh.material.emissive.setHex(c)
+          if (m.ring && m.ring.material) {
+            m.ring.material.color.setHex(c)
+            m.ring.material.emissive.setHex(c)
+          }
+        }
       })
     }
   } catch { /* ignore */ }

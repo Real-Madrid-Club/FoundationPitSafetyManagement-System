@@ -1,6 +1,7 @@
 package cn.edu.cdu.pitsafety.predict.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class DeviceHealth {
@@ -12,4 +13,5 @@ public class DeviceHealth {
     private String status;      // normal / warning / danger
     private Double slope;
     private Double lastValue;
+    private List<HealthTimelinePoint> timeline;
 }

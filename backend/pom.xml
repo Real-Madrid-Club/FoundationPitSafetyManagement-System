@@ -106,6 +106,7 @@
                     <include>**/*.xml</include>
                     <include>**/*.yml</include>
                     <include>**/*.properties</include>
+                    <include>**/*.json</include>
                 </includes>
             </resource>
         </resources>

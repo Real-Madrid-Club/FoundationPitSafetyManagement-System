@@ -340,7 +340,7 @@ def main():
     # 输出
     output = {
         'modelVersion': datetime.now().strftime('%Y-%m-%d %H:%M'),
-        'algorithm': 'Linear Regression + PitMonitor-TwinBench Calibration',
+        'algorithm': 'Sliding Window Feature Scoring + Matrix Profile-inspired Anomaly Score + Linear Trend Calibration',
         'totalDevices': len(result),
         'devices': result,
     }

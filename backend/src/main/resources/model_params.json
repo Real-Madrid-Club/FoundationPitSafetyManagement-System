@@ -1,6 +1,6 @@
 {
   "modelVersion": "2026-05-27 19:05",
-  "algorithm": "Linear Regression + PitMonitor-TwinBench Calibration",
+  "algorithm": "Sliding Window Feature Scoring + Matrix Profile-inspired Anomaly Score + Linear Trend Calibration",
   "totalDevices": 23,
   "devices": {
     "SP1": {

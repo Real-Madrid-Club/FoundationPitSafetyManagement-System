@@ -53,6 +53,28 @@
           <div v-if="groupedSensors.length === 0" class="panel-empty">无匹配设备</div>
         </div>
       </div>
+      <div class="timeline-panel">
+        <div class="timeline-head">
+          <span>状态时间轴</span>
+          <strong>{{ timelineLabel }}</strong>
+        </div>
+        <input
+          v-model.number="timelineValue"
+          type="range"
+          min="-6"
+          max="6"
+          step="0.1"
+          class="timeline-slider"
+          @input="applyTimelineHealth"
+        />
+        <div class="timeline-ticks">
+          <span>前6个月</span>
+          <span>前3个月</span>
+          <span>当前</span>
+          <span>后3个月</span>
+          <span>后6个月</span>
+        </div>
+      </div>
     </div>
 
     <!-- 传感器数据图表弹窗 -->
@@ -84,6 +106,11 @@ import request from '@/api/request'
 
 // ---- 健康状态颜色 ----
 const HEALTH_COLORS = { 1: 0x44bb44, 2: 0xff9900, 3: 0xff4444, 4: 0x999999 }
+const STATUS_COLORS = { danger: 0xff4444, warning: 0xff9900, normal: 0x44bb44 }
+const STATUS_HEX = { danger: '#ff4444', warning: '#ff9900', normal: '#44bb44' }
+const TIMELINE_START_MONTH = -6
+const TIMELINE_END_MONTH = 6
+const STATUS_SEGMENT_COUNT = 15
 
 // ---- 传感器定义 ----
 const SENSOR_DEFS = [
@@ -127,10 +154,16 @@ const chartTotal = ref(0)
 const chartPageSize = ref(50)
 const loadingPercent = ref(0)
 const yOffset = ref(0)
+const timelineValue = ref(0)
 const searchText = ref('')
 const selectedCode = ref('')
 let chartInstance = null
 let currentSensorCode = ''
+const timelineLabel = computed(() => {
+  const months = Number(timelineValue.value.toFixed(1))
+  if (Math.abs(months) < 0.05) return '当前状态'
+  return months < 0 ? `前${Math.abs(months)}个月` : `后${months}个月`
+})
 
 const visibleMap = reactive({})
 const markerMap = {}
@@ -202,8 +235,7 @@ function createMarkers(modelGroup, box) {
   const positions = computeDefaultPositions(box)
   SENSOR_DEFS.forEach(def => {
     const pos = positions[def.code] || { x: 0, y: box.max.y, z: 0 }
-    const status = deviceStatusMap[def.code] || 1
-    const color = HEALTH_COLORS[status] || 0x888888
+    const color = HEALTH_COLORS[1]
 
     let geo
     if (def.type === 'axialForce') {
@@ -274,6 +306,8 @@ function toggleSensor(code) {
     m.mesh.visible = visibleMap[code]
     if (m.ring) m.ring.visible = visibleMap[code]
   }
+  if (healthLabels[code]) healthLabels[code].visible = visibleMap[code]
+  if (percentLabels[code]) percentLabels[code].visible = visibleMap[code]
 }
 
 function toggleGroup(group) {
@@ -285,22 +319,23 @@ function toggleGroup(group) {
       m.mesh.visible = !allOn
       if (m.ring) m.ring.visible = !allOn
     }
+    if (healthLabels[s.code]) healthLabels[s.code].visible = !allOn
+    if (percentLabels[s.code]) percentLabels[s.code].visible = !allOn
   })
 }
 
 function getSensorColor(code) {
-  const status = deviceStatusMap[code] || 1
-  const hex = HEALTH_COLORS[status] ? '#' + HEALTH_COLORS[status].toString(16).padStart(6, '0') : '#888'
-  return hex
+  const status = healthDataMap[code]?.status || 'normal'
+  return STATUS_HEX[status] || '#44bb44'
 }
 
 function getHealthPct(code) {
-  return healthDataMap[code]?.healthPercent ?? '--'
+  return healthDataMap[code]?.healthPercent ?? 100
 }
 
 function getHealthColor(code) {
   const s = healthDataMap[code]?.status
-  return s === 'danger' ? '#ff4444' : s === 'warning' ? '#ff9900' : '#44bb44'
+  return STATUS_HEX[s] || '#44bb44'
 }
 
 function onPanelClick(s) {
@@ -319,62 +354,144 @@ function onPanelClick(s) {
 
 // ---- 健康度血条 ----
 const healthDataMap = reactive({}) // { code: { healthPercent, status, ... } }
+const forecastHealthMap = reactive({}) // 后端预测终点数据
 const healthLabels = {} // code → CSS2DObject
+const percentLabels = {} // code → CSS2DObject
 
 function createHealthBar(code, color) {
-  const div = document.createElement('div')
-  div.className = 'health-bar-3d'
-  div.innerHTML = `
-    <div class="hb-track"><div class="hb-fill" style="width:100%;background:${color}"></div></div>
-    <div class="hb-text">100%</div>
-  `
-  const label = new CSS2DObject(div)
-  label.position.set(0, 0, 0)
-  label.visible = true
-  modelGroup.add(label)
-  healthLabels[code] = label
+  const barDiv = document.createElement('div')
+  barDiv.className = 'health-bar-3d'
+  barDiv.innerHTML = `<div class="hb-segments"></div>`
+  const barLabel = new CSS2DObject(barDiv)
+  barLabel.position.set(0, 0, 0)
+  barLabel.visible = true
+  modelGroup.add(barLabel)
+  healthLabels[code] = barLabel
+
+  const pctDiv = document.createElement('div')
+  pctDiv.className = 'health-percent-3d'
+  pctDiv.textContent = '100%'
+  pctDiv.style.color = color
+  const pctLabel = new CSS2DObject(pctDiv)
+  pctLabel.position.set(0, 0, 0)
+  pctLabel.visible = true
+  modelGroup.add(pctLabel)
+  percentLabels[code] = pctLabel
 }
 
 function updateHealthBar(code, pct, status) {
   const label = healthLabels[code]
-  if (!label) return
-  const div = label.element
-  const colors = { danger: '#ff4444', warning: '#ff9900', normal: '#44bb44' }
-  const c = colors[status] || '#44bb44'
-  div.querySelector('.hb-fill').style.width = pct + '%'
-  div.querySelector('.hb-fill').style.background = c
-  div.querySelector('.hb-text').textContent = pct + '%'
-  div.querySelector('.hb-text').style.color = c
+  const percentLabel = percentLabels[code]
+  const c = STATUS_HEX[status] || '#44bb44'
+  if (label) renderStatusSegments(code)
+  if (percentLabel) {
+    percentLabel.element.textContent = pct + '%'
+    percentLabel.element.style.color = c
+  }
 }
 
 function positionHealthBar(code, yOffsetVal) {
   const m = markerMap[code]
   const label = healthLabels[code]
-  if (!m || !label) return
+  const percentLabel = percentLabels[code]
+  if (!m) return
   const pos = m.mesh.position
-  label.position.set(pos.x, pos.y + 1.2 + yOffsetVal * 0.05, pos.z)
+  if (label) label.position.set(pos.x, pos.y + 1.15 + yOffsetVal * 0.05, pos.z)
+  if (percentLabel) percentLabel.position.set(pos.x, pos.y - 0.65, pos.z)
+}
+
+function statusFromPercent(pct) {
+  return pct >= 80 ? 'normal' : pct >= 50 ? 'warning' : 'danger'
+}
+
+function healthPercentAtMonth(code, monthOffset) {
+  const target = forecastHealthMap[code]
+  const timeline = Array.isArray(target?.timeline) ? target.timeline : []
+  if (timeline.length) {
+    const points = [...timeline]
+      .filter(p => p.monthOffset !== undefined && p.healthPercent !== undefined)
+      .sort((a, b) => a.monthOffset - b.monthOffset)
+
+    if (!points.length) return 100
+    if (monthOffset <= points[0].monthOffset) return points[0].healthPercent
+    if (monthOffset >= points[points.length - 1].monthOffset) return points[points.length - 1].healthPercent
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const left = points[i]
+      const right = points[i + 1]
+      if (monthOffset >= left.monthOffset && monthOffset <= right.monthOffset) {
+        const span = right.monthOffset - left.monthOffset || 1
+        const ratio = (monthOffset - left.monthOffset) / span
+        return Math.round(left.healthPercent + (right.healthPercent - left.healthPercent) * ratio)
+      }
+    }
+  }
+
+  const targetPct = target?.healthPercent ?? 100
+  if (monthOffset <= 0) return 100
+  const factor = Math.min(monthOffset / TIMELINE_END_MONTH, 1)
+  return Math.round(100 - (100 - targetPct) * factor)
+}
+
+function renderStatusSegments(code) {
+  const label = healthLabels[code]
+  if (!label) return
+  const wrap = label.element.querySelector('.hb-segments')
+  if (!wrap) return
+
+  const activeMonth = Number(timelineValue.value)
+  wrap.innerHTML = ''
+  for (let i = 0; i < STATUS_SEGMENT_COUNT; i++) {
+    const ratio = STATUS_SEGMENT_COUNT === 1 ? 0 : i / (STATUS_SEGMENT_COUNT - 1)
+    const month = TIMELINE_START_MONTH + (TIMELINE_END_MONTH - TIMELINE_START_MONTH) * ratio
+    const pct = healthPercentAtMonth(code, month)
+    const status = statusFromPercent(pct)
+    const seg = document.createElement('span')
+    seg.className = 'hb-segment'
+    const c = STATUS_HEX[status] || STATUS_HEX.normal
+    seg.style.background = c
+    seg.style.color = c
+    if (Math.abs(month - activeMonth) <= 0.18) seg.classList.add('active')
+    wrap.appendChild(seg)
+  }
+}
+
+function setSensorVisual(code, status) {
+  const m = markerMap[code]
+  if (!m || !m.mesh || !m.mesh.material) return
+  const c = STATUS_COLORS[status] || STATUS_COLORS.normal
+  m.mesh.material.color.setHex(c)
+  m.mesh.material.emissive.setHex(c)
+  if (m.ring && m.ring.material) {
+    m.ring.material.color.setHex(c)
+    m.ring.material.emissive.setHex(c)
+  }
+}
+
+function applyTimelineHealth() {
+  SENSOR_DEFS.forEach(({ code }) => {
+    const target = forecastHealthMap[code]
+    const pct = healthPercentAtMonth(code, timelineValue.value)
+    const status = statusFromPercent(pct)
+    healthDataMap[code] = {
+      ...(target || {}),
+      sensorCode: code,
+      healthPercent: pct,
+      status,
+    }
+    updateHealthBar(code, pct, status)
+    setSensorVisual(code, status)
+  })
 }
 
 async function fetchAllHealth() {
   try {
     const list = await request.get('/health/all')
-    const statColors = { danger: 0xff4444, warning: 0xff9900, normal: 0x44bb44 }
     if (Array.isArray(list)) {
       list.forEach(d => {
-        healthDataMap[d.sensorCode] = d
-        updateHealthBar(d.sensorCode, d.healthPercent, d.status)
-        // 传感器标记颜色同步血条
-        const m = markerMap[d.sensorCode]
-        if (m && m.mesh && m.mesh.material) {
-          const c = statColors[d.status] || 0x888888
-          m.mesh.material.color.setHex(c)
-          m.mesh.material.emissive.setHex(c)
-          if (m.ring && m.ring.material) {
-            m.ring.material.color.setHex(c)
-            m.ring.material.emissive.setHex(c)
-          }
-        }
+        forecastHealthMap[d.sensorCode] = d
       })
+      applyTimelineHealth()
     }
   } catch { /* ignore */ }
 }
@@ -653,6 +770,7 @@ onMounted(async () => {
 
     // 创建传感器
     createMarkers(modelGroup, box2)
+    applyTimelineHealth()
 
     // 拉取健康预测数据
     fetchAllHealth().then(() => {
@@ -786,7 +904,7 @@ onBeforeUnmount(() => {
   position: absolute;
   left: 10px;
   top: 90px;
-  bottom: 10px;
+  bottom: 96px;
   width: 200px;
   background: rgba(20, 20, 40, 0.88);
   border-radius: 8px;
@@ -795,6 +913,41 @@ onBeforeUnmount(() => {
   flex-direction: column;
   overflow: hidden;
   z-index: 10;
+}
+.timeline-panel {
+  position: absolute;
+  left: 240px;
+  right: 24px;
+  bottom: 18px;
+  z-index: 12;
+  padding: 12px 18px 10px;
+  background: rgba(20, 20, 40, 0.9);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+.timeline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ccc;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.timeline-head strong {
+  color: #409EFF;
+  font-size: 14px;
+}
+.timeline-slider {
+  width: 100%;
+  accent-color: #409EFF;
+}
+.timeline-ticks {
+  display: flex;
+  justify-content: space-between;
+  color: #888;
+  font-size: 11px;
+  margin-top: 4px;
 }
 .panel-search {
   margin: 8px;
@@ -874,7 +1027,7 @@ onBeforeUnmount(() => {
 .health-bar-3d {
   background: rgba(0,0,0,0.7);
   border-radius: 6px;
-  padding: 3px 8px;
+  padding: 4px 6px;
   font-size: 11px;
   color: #fff;
   text-align: center;
@@ -882,23 +1035,35 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   pointer-events: none;
 }
-.hb-track {
-  width: 50px;
-  height: 5px;
-  background: #333;
-  border-radius: 3px;
-  margin: 2px auto;
-  overflow: hidden;
+.hb-segments {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
 }
-.hb-fill {
-  height: 100%;
+.hb-segment {
+  width: 3px;
+  height: 12px;
   border-radius: 3px;
-  transition: width 0.5s, background 0.5s;
+  opacity: 0.45;
+  transition: opacity 0.2s, transform 0.2s;
 }
-.hb-text {
+.hb-segment.active {
+  opacity: 1;
+  transform: scaleY(1.25);
+  box-shadow: 0 0 8px currentColor;
+}
+.health-percent-3d {
+  background: rgba(0,0,0,0.72);
+  border-radius: 999px;
+  padding: 2px 8px;
   font-size: 10px;
   font-weight: bold;
-  line-height: 1;
+  line-height: 1.4;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* 加载进度遮罩 */
